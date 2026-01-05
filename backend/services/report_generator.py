@@ -97,53 +97,53 @@ class ReportGenerator:
             print(f"Error creating vectorstore: {e}")
             self.vectorstore = None
     
-def _generate_mda_sections(self, relevant_chunks: List[str]) -> Dict[str, str]:
-    if not self.llm:
-        return self._generate_template_report()
+    def _generate_mda_sections(self, relevant_chunks: List[str]) -> Dict[str, str]:
+        if not self.llm:
+            return self._generate_template_report()
 
-    prompt_template = ChatPromptTemplate.from_messages([
-        ("system", 
-         "You are a financial analyst writing a Management Discussion & Analysis (MD&A) report. "
-         "Use the provided financial data and analysis to create structured sections."),
-        ("human", 
-         """Financial Data Context:
-{context}
+        prompt_template = ChatPromptTemplate.from_messages([
+            ("system", 
+            "You are a financial analyst writing a Management Discussion & Analysis (MD&A) report. "
+            "Use the provided financial data and analysis to create structured sections."),
+            ("human", 
+            """Financial Data Context:
+    {context}
 
-Analysis Results:
-- YoY Change: {yoy_change}%
-- QoQ Change: {qoq_change}%
-- Total Revenue: ${total_revenue}
+    Analysis Results:
+    - YoY Change: {yoy_change}%
+    - QoQ Change: {qoq_change}%
+    - Total Revenue: ${total_revenue}
 
-Generate:
-1. Executive Summary
-2. Revenue Trends
-3. KPIs
-4. Risks
-5. Outlook
-""")
-    ])
+    Generate:
+    1. Executive Summary
+    2. Revenue Trends
+    3. KPIs
+    4. Risks
+    5. Outlook
+    """)
+        ])
 
-    try:
-        chain = prompt_template | self.llm
+        try:
+            chain = prompt_template | self.llm
 
-        context = "\n\n".join(relevant_chunks[:5])
+            context = "\n\n".join(relevant_chunks[:5])
 
-        result = chain.invoke({
-            "context": context,
-            "yoy_change": f"{self.analyzer.calculate_yoy_change():.2f}",
-            "qoq_change": f"{self.analyzer.calculate_qoq_change():.2f}",
-            "total_revenue": f"{self.analyzer.calculate_kpis().get('total_revenue', 0):,.2f}"
-        })
+            result = chain.invoke({
+                "context": context,
+                "yoy_change": f"{self.analyzer.calculate_yoy_change():.2f}",
+                "qoq_change": f"{self.analyzer.calculate_qoq_change():.2f}",
+                "total_revenue": f"{self.analyzer.calculate_kpis().get('total_revenue', 0):,.2f}"
+            })
 
-        report_text = result.content if hasattr(result, "content") else str(result)
+            report_text = result.content if hasattr(result, "content") else str(result)
 
-        return {
-            "report": report_text,
-            "citations": relevant_chunks
-        }
+            return {
+                "report": report_text,
+                "citations": relevant_chunks
+            }
 
-    except Exception as e:
-        print(f"LLM generation error: {e}")
+        except Exception as e:
+            print(f"LLM generation error: {e}")
         return self._generate_template_report()
 
     
